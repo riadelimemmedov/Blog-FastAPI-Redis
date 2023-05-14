@@ -1,9 +1,8 @@
-
 #!FastApi
 from fastapi import FastAPI
 
 #!Models and Serializers
-from models import Author, Blog
+from models import Author, Blog, Comment
 
 #!Redis Orm
 from redis_om.model import NotFoundError
@@ -12,8 +11,9 @@ from redis_om.model import NotFoundError
 from datetime import datetime
 
 
-#create your views here,and run server =>  uvicorn main:app --reload
+# create your views here,and run server =>  uvicorn main:app --reload
 app = FastAPI()
+
 
 # root
 @app.get("/")
@@ -173,3 +173,100 @@ async def delete_all_blogs():
     """
     Blog.find((Blog.slug == "blog")).delete()
     return {"success": "Deleted all blogs successfully"}
+
+
+# ?get_all_comments
+@app.get("/comment/blog/{blog_pk}/")  # +
+async def get_all_comments(blog_pk: str):
+    """
+    Get all comments for related to specific blog
+    """
+    comments = Comment.find((Comment.slug == "comment")).all()
+    comments_blog = []
+    for comment in comments:
+        if comment.blog == blog_pk:
+            comments_blog.append(
+                {
+                    "pk": comment.pk,
+                    "body": comment.body,
+                    "date_commented": comment.date_commented,
+                    "slug": comment.slug,
+                    "author": comment.author,
+                    "blog": comment.blog,
+                }
+            )
+    return comments_blog
+
+
+# ?create_comment
+@app.post("/comment/blog/{blog_pk}/{author_pk}/")  # +
+async def create_comment(blog_pk: str, author_pk: str, body: dict):
+    """
+    Create comment for each specific blog
+    """
+    comment = Comment(body=body["body"], blog=blog_pk, author=author_pk)
+    comment.save()
+    return comment
+
+
+# ?get_comment
+@app.get("/comments/{pk}")  # +
+async def get_comment(pk: str):
+    """
+    Return single comment,for matching primary comment key value
+    """
+    try:
+        comment = Comment.get(pk)
+    except NotFoundError:
+        return {"error": "Not found comment"}, 404
+    return comment
+
+
+# ?update_comment
+@app.patch("/comments/{blog_pk}/{comment_pk}")  # +
+async def update_comment(blog_pk: str, comment_pk: str, body: dict):
+    """
+    Update comment for specified blog
+    """
+    comments = Comment.find((Comment.slug == "comment")).all()
+    comments_blog = []
+    for comment in comments:
+        if comment.blog == blog_pk and comment.pk == comment_pk:
+            comment.body = body["body"]
+            comment.save()
+            comments_blog.append(comment)
+    return comments_blog
+
+
+# ?delete_comment
+@app.delete("/comments/{comment_pk}")  # +
+async def delete_comment(comment_pk: str):
+    """
+    Delete single comment
+    """
+    Comment.delete(comment_pk)
+    return {"success": "Comment deleted successfully"}
+
+
+# ?delete_blog_comments
+@app.delete("/delete/blog/comments/{blog_pk}")  # +
+async def delete_blog_comments(blog_pk: str, comment_pk: str):
+    """
+    Delete all comments related to specific blog
+    """
+    comments = Comment.find((Comment.slug == "comment")).all()
+    for comment in comments:
+        if comment.blog == blog_pk:
+            print("Comment ", comment)
+            Comment.delete(comment.pk)
+    return {"success": "Deleted all comments related to specific blog"}
+
+
+# ?delete_all_comments
+@app.delete("/comments/")  # +
+async def delete_all_comments():
+    """
+    Delete all comments
+    """
+    Comment.find((Comment.slug == "comment")).delete()
+    return {"success": "Deleted all comments successfully"}
