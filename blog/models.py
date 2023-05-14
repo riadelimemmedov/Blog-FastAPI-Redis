@@ -61,6 +61,7 @@ class Blog(EmbeddedJsonModel):
 #!Comment
 class Comment(JsonModel):
     body : str
+    slug = Field(default=f"comment")
     blog = Blog
     author = Author
     date_commented: datetime.date = Field(
