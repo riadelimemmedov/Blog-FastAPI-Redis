@@ -71,5 +71,7 @@ class Comment(JsonModel):
     class Meta:
         database = redis
 
+
 #?Migrate table to redis cloud database
 Migrator().run()
+
