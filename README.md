@@ -44,7 +44,7 @@ Blog-FastAPI-Redis is a Python-based web application designed for building a RES
 ####
 
 ### Redis Configuration
-    By default, the application uses a local Redis server running 
+    By default, the application uses Redis Cloud server running 
     on the default port (6379). If you want to use a different 
     Redis server, you can change the redis_host and redis_port 
     variables in the main.py file.
